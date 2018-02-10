@@ -42,8 +42,8 @@
 #define PANASONIC_AIRCON2_HS_MLEFT   0x0A
 #define PANASONIC_AIRCON2_HS_MRIGHT  0x0B
 #define PANASONIC_AIRCON2_HS_RIGHT   0x0C
-#define PANASONIC_AIRCON2_QUIET      0x01 // Quiet setting
-#define PANASONIC_AIRCON2_POWERFUL   0x20 // Powerful setting
+#define PANASONIC_AIRCON2_QUIET      0x20 // Quiet setting
+#define PANASONIC_AIRCON2_POWERFUL   0x01 // Powerful setting
 
 // Panasonic model codes
 #define PANASONIC_DKE 0

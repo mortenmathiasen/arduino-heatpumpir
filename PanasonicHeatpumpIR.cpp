@@ -21,7 +21,7 @@ PanasonicDKEHeatpumpIR::PanasonicDKEHeatpumpIR() : PanasonicHeatpumpIR()
 PanasonicJKEHeatpumpIR::PanasonicJKEHeatpumpIR() : PanasonicHeatpumpIR()
 {
   static const char PROGMEM model[] PROGMEM = "panasonic_jke";
-  static const char PROGMEM info[]  PROGMEM = "{\"mdl\":\"panasonic_jke\",\"dn\":\"Panasonic JKE\",\"mT\":16,\"xT\":30,\"fs\":6}";
+  static const char PROGMEM info[]  PROGMEM = "{\"mdl\":\"panasonic_jke\",\"dn\":\"Panasonic JKE\",\"mT\":16,\"xT\":30,\"fs\":8},\"maint\":[8,10]}";
 
   _model = model;
   _info = info;
@@ -55,7 +55,12 @@ PanasonicLKEHeatpumpIR::PanasonicLKEHeatpumpIR() : PanasonicHeatpumpIR()
 // Panasonic DKE/NKE/JKE numeric values to command bytes
 void PanasonicHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd)
 {
-  send(IR, powerModeCmd, operatingModeCmd, fanSpeedCmd, temperatureCmd, swingVCmd, swingHCmd, false, false);
+  if (fanSpeedCmd == FAN_QUIET)
+    send(IR, powerModeCmd, operatingModeCmd, fanSpeedCmd, temperatureCmd, swingVCmd, swingHCmd, false, true);
+  else if (fanSpeedCmd == FAN_POWERFUL)
+    send(IR, powerModeCmd, operatingModeCmd, fanSpeedCmd, temperatureCmd, swingVCmd, swingHCmd, true, false);
+  else
+    send(IR, powerModeCmd, operatingModeCmd, fanSpeedCmd, temperatureCmd, swingVCmd, swingHCmd, false, false);
 }
 
 // Panasonic DKE/NKE/JKE numeric values to command bytes
@@ -63,11 +68,11 @@ void PanasonicHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t opera
 {
   // Sensible defaults for the heat pump mode
 
-  uint8_t operatingMode = PANASONIC_AIRCON2_TIMER_CNL;
-  uint8_t fanSpeed      = PANASONIC_AIRCON2_FAN_AUTO;
-  uint8_t temperature   = 23;
-  uint8_t swingV        = PANASONIC_AIRCON2_VS_UP;
-  uint8_t swingH        = PANASONIC_AIRCON2_HS_AUTO;
+  uint8_t operatingMode = 0;
+  uint8_t fanSpeed      = 0;
+  uint8_t temperature   = 0;
+  uint8_t swingV        = 0;
+  uint8_t swingH        = 0;
   uint8_t profile       = 0;
 
   switch (powerModeCmd)
@@ -82,9 +87,6 @@ void PanasonicHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t opera
 
   switch (operatingModeCmd)
   {
-    case MODE_AUTO:
-      operatingMode |= PANASONIC_AIRCON2_MODE_AUTO;
-      break;
     case MODE_HEAT:
       operatingMode |= PANASONIC_AIRCON2_MODE_HEAT;
       break;
@@ -103,13 +105,13 @@ void PanasonicHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t opera
 	  temperature = 10; // Default to +10 degrees
 	  fanSpeedCmd = FAN_5;
       break;
+    case MODE_AUTO:
+    else:
+      operatingMode |= PANASONIC_AIRCON2_MODE_AUTO;
   }
 
   switch (fanSpeedCmd)
   {
-    case FAN_AUTO:
-      fanSpeed = PANASONIC_AIRCON2_FAN_AUTO;
-      break;
     case FAN_1:
       fanSpeed = PANASONIC_AIRCON2_FAN1;
       break;
@@ -125,19 +127,20 @@ void PanasonicHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t opera
     case FAN_5:
       fanSpeed = PANASONIC_AIRCON2_FAN5;
       break;
+    case FAN_AUTO:
+    else:
+      fanSpeed = PANASONIC_AIRCON2_FAN_AUTO;
   }
 
   if ( temperatureCmd > 15 && temperatureCmd < 31)
   {
     temperature = temperatureCmd;
+  } else {
+    temperature = 20;
   }
 
   switch (swingVCmd)
   {
-    case VDIR_AUTO:
-    case VDIR_SWING:
-      swingV = PANASONIC_AIRCON2_VS_AUTO;
-      break;
     case VDIR_UP:
       swingV = PANASONIC_AIRCON2_VS_UP;
       break;
@@ -153,14 +156,14 @@ void PanasonicHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t opera
     case VDIR_DOWN:
       swingV = PANASONIC_AIRCON2_VS_DOWN;
       break;
+    case VDIR_AUTO:
+    case VDIR_SWING:
+    else:
+      swingV = PANASONIC_AIRCON2_VS_AUTO;
   }
 
   switch (swingHCmd)
   {
-    case HDIR_AUTO:
-    case HDIR_SWING:
-      swingH = PANASONIC_AIRCON2_HS_AUTO;
-      break;
     case HDIR_MIDDLE:
       swingH = PANASONIC_AIRCON2_HS_MIDDLE;
       break;
@@ -176,6 +179,10 @@ void PanasonicHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t opera
     case HDIR_MRIGHT:
       swingH = PANASONIC_AIRCON2_HS_MRIGHT;
       break;
+    case HDIR_AUTO:
+    case HDIR_SWING:
+    else:
+      swingH = PANASONIC_AIRCON2_HS_AUTO;
   }
 
   // Quiet & powerful, both cannot be set at the same time
@@ -183,13 +190,15 @@ void PanasonicHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t opera
   if ( quietCmd == true )
   {
     profile = PANASONIC_AIRCON2_QUIET;
+    fanSpeed = PANASONIC_AIRCON2_FAN1;
   } else if ( powerfulCmd == true )
   {
     profile = PANASONIC_AIRCON2_POWERFUL;
+    fanSpeed = PANASONIC_AIRCON2_FAN_AUTO;
   }
 
-  // NKE has +8 / + 10 maintenance heating, which also means MAX fanspeed
-  if ( _panasonicModel == PANASONIC_NKE )
+  // JKE and NKE has +8 / + 10 maintenance heating, which also means MAX fanspeed
+  if ( _panasonicModel == PANASONIC_NKE || _panasonicModel == PANASONIC_JKE )
   {
     if ( temperatureCmd == 8 || temperatureCmd == 10 )
     {
@@ -217,11 +226,10 @@ void PanasonicHeatpumpIR::sendPanasonic(IRSender& IR, uint8_t operatingMode, uin
   switch(_panasonicModel)
   {
     case PANASONIC_DKE:
-      panasonicTemplate[17] = swingH; // Only the DKE model has a setting for the horizontal air flow
       panasonicTemplate[23] = 0x01;
       panasonicTemplate[25] = 0x06;
-      break;
     case PANASONIC_JKE:
+      panasonicTemplate[17] = swingH; // Only the JKE+DKE model has a setting for the horizontal air flow
       break;
     case PANASONIC_NKE:
       panasonicTemplate[17] = 0x06;
