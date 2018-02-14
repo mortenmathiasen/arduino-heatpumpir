@@ -106,7 +106,7 @@ void PanasonicHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t opera
 	  fanSpeedCmd = FAN_5;
       break;
     case MODE_AUTO:
-    else:
+    default:
       operatingMode |= PANASONIC_AIRCON2_MODE_AUTO;
   }
 
@@ -128,7 +128,7 @@ void PanasonicHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t opera
       fanSpeed = PANASONIC_AIRCON2_FAN5;
       break;
     case FAN_AUTO:
-    else:
+    default:
       fanSpeed = PANASONIC_AIRCON2_FAN_AUTO;
   }
 
@@ -158,7 +158,7 @@ void PanasonicHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t opera
       break;
     case VDIR_AUTO:
     case VDIR_SWING:
-    else:
+    default:
       swingV = PANASONIC_AIRCON2_VS_AUTO;
   }
 
@@ -181,7 +181,7 @@ void PanasonicHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t opera
       break;
     case HDIR_AUTO:
     case HDIR_SWING:
-    else:
+    default:
       swingH = PANASONIC_AIRCON2_HS_AUTO;
   }
 
