@@ -255,8 +255,8 @@ void PanasonicHeatpumpIR::sendPanasonic(IRSender& IR, uint8_t operatingMode, uin
 
   panasonicTemplate[26] = checksum;
 
-  // 38 kHz PWM frequency
-  IR.setFrequency(38);
+  // 37 kHz PWM frequency
+  IR.setFrequency(37);
 
   // Header
   IR.mark(PANASONIC_AIRCON2_HDR_MARK);
